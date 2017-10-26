@@ -4,9 +4,42 @@
 
 -module(ej17).
 
--export([prueba_calcula/0, inicio/0]).
+-export([prueba_hola/0, prueba_calcula/0, inicio/0]).
 
 -import(timer, [sleep/1]).
+
+% 1 hola
+
+prueba_hola() ->
+   H = spawn(fun() -> hola() end),
+   register(contador, spawn(fun() -> contador(0) end)),
+   prueba_hola (10, H).
+
+prueba_hola(N, H) when N > 0 ->
+   H ! {hola, self()},
+   receive
+       {reply, C} ->
+           io:format("Recibido ~w~n", [C]),
+           prueba_hola(N-1, H)
+   end;
+
+prueba_hola(_, _) ->
+    io:format("Mi trabajo está hecho").
+
+hola() -> 
+receive
+    {hola, P} -> C_PID = whereis(contador),
+                 C_PID ! {uno_mas},
+                 C_PID ! {get, P},
+                 hola()
+end.
+
+contador(N) ->
+receive
+    {uno_mas} -> contador(N + 1);
+    {get, P} -> P ! {reply, N}, contador(N)
+end.
+
 
 % 2 calcula
 %
